@@ -63,7 +63,9 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'cache.weather' => \App\Http\Middleware\CacheWeatherData::class,
-        'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+        'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+        // Mantener la versión personalizada con un alias diferente por si es necesario
+        'custom.permission' => \App\Http\Middleware\PermissionMiddleware::class,
     ];
 }

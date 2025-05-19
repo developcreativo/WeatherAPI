@@ -47,7 +47,7 @@ class AuthControllerTest extends TestCase
         ]);
 
         // Attempt to login
-        $response = $this->postJson('api/login', [
+        $response = $this->postJson('api/auth/login', [
             'email' => 'login@example.com',
             'password' => 'password123',
         ]);
@@ -65,7 +65,7 @@ class AuthControllerTest extends TestCase
      */
     public function test_login_validation_error(): void
     {
-        $response = $this->postJson('api/login', [
+        $response = $this->postJson('api/auth/login', [
             'email' => 'not-an-email',
             'password' => 'short',
         ]);
