@@ -8,11 +8,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Http;
 use Mockery;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
+use Tests\WithPermissions;
 
 class WeatherControllerTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, WithPermissions;
 
     protected User $user;
     protected string $token;
@@ -24,6 +26,13 @@ class WeatherControllerTest extends TestCase
         // Create a user and token for testing
         $this->user = User::factory()->create();
         $this->token = $this->user->createToken('test-token')->plainTextToken;
+        
+        // Assign necessary permissions
+        $this->assignPermissions($this->user, [
+            'view weather',
+            'view history',
+            'clear history'
+        ]);
     }
 
     /**
@@ -52,7 +61,9 @@ class WeatherControllerTest extends TestCase
         // Make the API request
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
-        ])->getJson('api/weather?city=London');
+        ])->postJson('api/weather/current', [
+            'city' => 'London'
+        ]);
 
         // Check the response
         $response->assertStatus(200)
@@ -93,12 +104,14 @@ class WeatherControllerTest extends TestCase
         // Make the API request
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
-        ])->getJson('api/weather?city=InvalidCity');
+        ])->postJson('api/weather/current', [
+            'city' => 'InvalidCity'
+        ]);
 
         // Check the response
         $response->assertStatus(404)
             ->assertJson([
-                'message' => 'Unable to fetch weather data for the specified city.',
+                'message' => __('weather.weather_data_failure'),
             ]);
     }
 
@@ -197,7 +210,7 @@ class WeatherControllerTest extends TestCase
         // Check the response
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Search history cleared successfully',
+                'message' => __('weather.search_history_clear_success'),
             ]);
 
         // Verify the records were deleted

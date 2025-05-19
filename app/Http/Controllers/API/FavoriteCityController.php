@@ -30,6 +30,23 @@ class FavoriteCityController extends Controller
 
     /**
      * Get all favorite cities for the authenticated user.
+     * 
+     * @OA\Get(
+     *     path="/api/favorites",
+     *     summary="Get user's favorite cities",
+     *     tags={"Favorites"},
+     *     security={"sanctum": {}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Favorite cities retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
      *
      * @param Request $request
      * @return JsonResponse
@@ -39,13 +56,39 @@ class FavoriteCityController extends Controller
         $favoriteCities = $request->user()->favoriteCities()->get();
 
         return response()->json([
-            'message' => 'Favorite cities retrieved successfully',
+            'message' => __('weather.favorite_cities_success'),
             'data' => $favoriteCities,
         ]);
     }
 
     /**
      * Add a city to favorites.
+     * 
+     * @OA\Post(
+     *     path="/api/favorites",
+     *     summary="Add a city to favorites",
+     *     tags={"Favorites"},
+     *     security={"sanctum": {}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"city"},
+     *             @OA\Property(property="city", type="string", example="London")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="City added to favorites successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="City not found"),
+     *     @OA\Response(response=422, description="City already in favorites"),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
      *
      * @param Request $request
      * @return JsonResponse
@@ -63,7 +106,7 @@ class FavoriteCityController extends Controller
         
         if (!$weatherData) {
             return response()->json([
-                'message' => 'Unable to find the specified city.',
+                'message' => __('weather.weather_data_failure'),
             ], 404);
         }
 
@@ -74,20 +117,20 @@ class FavoriteCityController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'City added to favorites successfully',
+                'message' => __('weather.city_favorite_success'),
                 'data' => $favoriteCity,
             ], 201);
         } catch (QueryException $e) {
             // Check if this is a duplicate entry error
             if ($e->getCode() === '23000') { // Integrity constraint violation
                 return response()->json([
-                    'message' => 'This city is already in your favorites',
+                    'message' => __('weather.city_favorite_exists'),
                 ], 422);
             }
 
             // For other database errors
             return response()->json([
-                'message' => 'Failed to add city to favorites',
+                'message' => __('weather.city_favorite_failure'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -95,6 +138,29 @@ class FavoriteCityController extends Controller
 
     /**
      * Remove a city from favorites.
+     * 
+     * @OA\Delete(
+     *     path="/api/favorites/{id}",
+     *     summary="Remove a city from favorites",
+     *     tags={"Favorites"},
+     *     security={"sanctum": {}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="City removed from favorites successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="City not found"),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
      *
      * @param Request $request
      * @param int $id
@@ -106,7 +172,7 @@ class FavoriteCityController extends Controller
         $favoriteCity->delete();
 
         return response()->json([
-            'message' => 'City removed from favorites successfully',
+            'message' => __('weather.city_favorite_remove_success'),
         ]);
     }
 }

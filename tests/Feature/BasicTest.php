@@ -28,8 +28,8 @@ class BasicTest extends TestCase
                 'action' => $route->getActionName(),
             ];
             
-            // Check if we have the API weather route
-            if ($uri === 'api/weather') {
+            // Check if we have any API weather route
+            if (strpos($uri, 'api/weather') === 0) {
                 $hasApiWeatherRoute = true;
             }
         }

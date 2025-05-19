@@ -16,7 +16,7 @@ class AuthControllerTest extends TestCase
      */
     public function test_user_can_register(): void
     {
-        $response = $this->postJson('api/register', [
+        $response = $this->postJson('api/auth/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
@@ -88,7 +88,7 @@ class AuthControllerTest extends TestCase
         // Attempt to logout
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
-        ])->postJson('api/logout');
+        ])->postJson('api/auth/logout');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -113,7 +113,7 @@ class AuthControllerTest extends TestCase
         // Attempt to get profile
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
-        ])->getJson('api/profile');
+        ])->getJson('api/auth/profile');
 
         $response->assertStatus(200)
             ->assertJson([

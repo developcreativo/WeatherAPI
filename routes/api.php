@@ -17,22 +17,42 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+});
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
-    Route::post('logout', [AuthController::class, 'logout']);
-    Route::get('profile', [AuthController::class, 'profile']);
+    Route::prefix('auth')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('profile', [AuthController::class, 'profile']);
+    });
     
     // Weather routes
-    Route::get('weather', [WeatherController::class, 'getCurrentWeather']);
-    Route::get('weather/history', [WeatherController::class, 'getSearchHistory']);
-    Route::delete('weather/history', [WeatherController::class, 'clearSearchHistory']);
+    Route::middleware('permission:view weather')->group(function () {
+        Route::post('weather/current', [WeatherController::class, 'getCurrentWeather']);
+    });
+    
+    Route::middleware('permission:view history')->group(function () {
+        Route::get('weather/history', [WeatherController::class, 'getSearchHistory']);
+    });
+    
+    Route::middleware('permission:clear history')->group(function () {
+        Route::delete('weather/history', [WeatherController::class, 'clearSearchHistory']);
+    });
     
     // Favorite cities routes
-    Route::get('favorites', [FavoriteCityController::class, 'index']);
-    Route::post('favorites', [FavoriteCityController::class, 'store']);
-    Route::delete('favorites/{id}', [FavoriteCityController::class, 'destroy']);
+    Route::middleware('permission:view favorites')->group(function () {
+        Route::get('favorites', [FavoriteCityController::class, 'index']);
+    });
+    
+    Route::middleware('permission:create favorites')->group(function () {
+        Route::post('favorites', [FavoriteCityController::class, 'store']);
+    });
+    
+    Route::middleware('permission:delete favorites')->group(function () {
+        Route::delete('favorites/{id}', [FavoriteCityController::class, 'destroy']);
+    });
 });

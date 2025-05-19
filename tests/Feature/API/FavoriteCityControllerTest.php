@@ -10,10 +10,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Mockery;
 use Tests\TestCase;
+use Tests\WithPermissions;
 
 class FavoriteCityControllerTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, WithPermissions;
 
     protected User $user;
     protected string $token;
@@ -25,6 +26,13 @@ class FavoriteCityControllerTest extends TestCase
         // Create a user and token for testing
         $this->user = User::factory()->create();
         $this->token = $this->user->createToken('test-token')->plainTextToken;
+        
+        // Assign necessary permissions
+        $this->assignPermissions($this->user, [
+            'view favorites',
+            'create favorites',
+            'delete favorites'
+        ]);
     }
 
     /**
@@ -100,7 +108,7 @@ class FavoriteCityControllerTest extends TestCase
         // Check the response
         $response->assertStatus(404)
             ->assertJson([
-                'message' => 'Unable to find the specified city.',
+                'message' => __('weather.weather_data_failure'),
             ]);
 
         // Check that no favorite city was saved to the database
@@ -169,7 +177,7 @@ class FavoriteCityControllerTest extends TestCase
         // Check the response
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'City removed from favorites successfully',
+                'message' => __('weather.city_favorite_remove_success'),
             ]);
 
         // Verify the city was removed from favorites

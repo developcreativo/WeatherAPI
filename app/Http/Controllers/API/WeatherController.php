@@ -30,7 +30,32 @@ class WeatherController extends Controller
 
     /**
      * Get current weather for a city.
-     *
+     * 
+     * @OA\Post(
+     *     path="/api/weather/current",
+     *     summary="Get current weather for a city",
+     *     tags={"Weather"},
+     *     security={"sanctum": {}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"city"},
+     *             @OA\Property(property="city", type="string", example="London")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Weather data retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="City not found"),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
+     * 
      * @param Request $request
      * @return JsonResponse
      */
@@ -45,7 +70,7 @@ class WeatherController extends Controller
 
         if (!$weatherData) {
             return response()->json([
-                'message' => 'Unable to fetch weather data for the specified city.',
+                'message' => __('weather.weather_data_failure'),
             ], 404);
         }
 
@@ -60,41 +85,82 @@ class WeatherController extends Controller
         }
 
         return response()->json([
-            'message' => 'Weather data retrieved successfully',
+            'message' => __('weather.weather_data_success'),
             'data' => $weatherData,
         ]);
     }
 
     /**
      * Get weather search history for the authenticated user.
-     *
+     * 
+     * @OA\Get(
+     *     path="/api/weather/history",
+     *     summary="Get weather search history",
+     *     tags={"Weather"},
+     *     security={"sanctum": {}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Search history retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
+     * 
      * @param Request $request
      * @return JsonResponse
      */
     public function getSearchHistory(Request $request): JsonResponse
     {
+        if (!$request->user()->can('view history')) {
+            return response()->json(['message' => __('weather.unauthorized')], 403);
+        }
+        
         $history = $request->user()->weatherSearches()
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return response()->json([
-            'message' => 'Search history retrieved successfully',
+            'message' => __('weather.search_history_success'),
             'data' => $history,
         ]);
     }
 
     /**
      * Clear weather search history for the authenticated user.
-     *
+     * 
+     * @OA\Delete(
+     *     path="/api/weather/history",
+     *     summary="Clear weather search history",
+     *     tags={"Weather"},
+     *     security={"sanctum": {}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Search history cleared successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
+     * 
      * @param Request $request
      * @return JsonResponse
      */
     public function clearSearchHistory(Request $request): JsonResponse
     {
+        if (!$request->user()->can('clear history')) {
+            return response()->json(['message' => __('weather.unauthorized')], 403);
+        }
+        
         $request->user()->weatherSearches()->delete();
 
         return response()->json([
-            'message' => 'Search history cleared successfully',
+            'message' => __('weather.search_history_clear_success'),
         ]);
     }
 }
